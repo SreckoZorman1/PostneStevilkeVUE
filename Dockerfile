@@ -6,7 +6,7 @@ RUN yarn install --pure-lockfile
 COPY frontend .
 RUN yarn build
 
-FROM node:14.15-alpine
+FROM node:16.10-alpine
 WORKDIR /app
 COPY backend/package.json backend/yarn.lock ./
 RUN yarn install --pure-lockfile

@@ -5,6 +5,7 @@ import { access, constants, createReadStream, createWriteStream, mkdirSync, rena
 import { join } from 'path';
 import { promisify } from 'util';
 import * as os from 'os';
+import { downloadGCloud, uploadGCloud } from '../../helpers/gcloud';
 
 const tag = 'Files';
 
@@ -32,14 +33,26 @@ export default async (app: FastifyInstance) => {
             }],
         },
     }, async (req, reply) => {
-        const data = await req.file();
+
+        const data: any = await req.file();
+
         const targetFolder = join(os.tmpdir(), req.params.entity, req.params.field);
         mkdirSync(targetFolder, { recursive: true });
         await promisify(pipeline)(data.file, createWriteStream(join(targetFolder, data.filename)));
         // filename should be accessed AFTER stream consumption
-        // @ts-ignore
-        renameSync(join(targetFolder, data.filename), join(targetFolder, data.fields.filename.value));
-        reply.status(200).send();
+        const idFileName = data.fields.filename.value
+        renameSync(join(targetFolder, data.filename), join(targetFolder, idFileName));
+        if (process.env.NODE_ENV === 'production') {
+            const folder = `${req.params.entity}/${req.params.field}`;
+            await uploadGCloud(folder, idFileName, req, reply, targetFolder);
+        } else {
+            const targetFolder = join(os.tmpdir(), req.params.entity, req.params.field);
+            mkdirSync(targetFolder, {recursive: true});
+            await promisify(pipeline)(data.file, createWriteStream(join(targetFolder, data.filename)));
+            // filename should be accessed AFTER stream consumption
+            renameSync(join(targetFolder, data.filename), join(targetFolder, data.fields.filename.value));
+            reply.status(200).send();
+        }
     });
 
     const downloadPayload = Type.Object({
@@ -50,10 +63,22 @@ export default async (app: FastifyInstance) => {
             tags: [tag],
             querystring: downloadPayload,
         },
-    }, (req, reply) => {
-        const filePath = join(os.tmpdir(), req.query.privateUrl);
-        promisify(access)(filePath, constants.F_OK)
-            .then(() => reply.status(200).send(createReadStream(filePath)))
-            .catch(() => reply.notFound());
+    }, async (req, reply) => {
+        if (process.env.NODE_ENV === 'production') {
+            const file = await downloadGCloud(req.query.privateUrl);
+
+            if (file) {
+                reply.hijack()
+                reply.raw.setHeader('Content-Type', file?.metadata.contentType)
+                file.createReadStream().pipe(reply.raw)
+            } else {
+                reply.notFound();
+            }
+        } else {
+            const filePath = join(os.tmpdir(), req.query.privateUrl);
+            promisify(access)(filePath, constants.F_OK)
+                .then(() => reply.status(200).send(createReadStream(filePath)))
+                .catch(() => reply.notFound());
+        }
     });
 };

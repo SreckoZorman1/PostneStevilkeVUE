@@ -14,6 +14,8 @@ import * as TypeBox from '@sinclair/typebox';
 
 import { Drzave, drzaveSchema } from './Drzave';
 
+import { Nullable } from '../utils';
+
 /**
  * Schema for postne_stevilke entity
  */
@@ -22,9 +24,9 @@ export const postne_stevilkeSchema = TypeBox.Type.Object({
 
         postna_stevilka: TypeBox.Type.String({ default: '' }),
 
-        kraj: TypeBox.Type.String({ default: '' }),
+        kraj_mesto: TypeBox.Type.String({ default: '' }),
 
-        id_drzave: TypeBox.Type.Optional(drzaveSchema),
+        drzave_id: TypeBox.Type.Optional(Nullable(drzaveSchema)),
 
 }, { additionalProperties: false });
 
@@ -35,16 +37,16 @@ export const postne_stevilkeInputSchema = TypeBox.Type.Object({
 
         postna_stevilka: TypeBox.Type.String({ default: '' }),
 
-        kraj: TypeBox.Type.String({ default: '' }),
+        kraj_mesto: TypeBox.Type.String({ default: '' }),
 
-        id_drzave: TypeBox.Type.Optional(TypeBox.Type.String()),
+        drzave_id: TypeBox.Type.Optional(TypeBox.Type.String()),
 
 }, { additionalProperties: false });
 
 export type Postne_stevilkeInput = TypeBox.Static<typeof postne_stevilkeInputSchema>;
 
 @Entity()
-export class Postne_stevilke implements Omit<TypeBox.Static<typeof postne_stevilkeSchema>, 'id_drzave'> {
+export class Postne_stevilke implements Omit<TypeBox.Static<typeof postne_stevilkeSchema>, 'drzave_id'> {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
@@ -61,10 +63,10 @@ export class Postne_stevilke implements Omit<TypeBox.Static<typeof postne_stevil
         postna_stevilka!: string;
 
         @Column({ default: '' })
-        kraj!: string;
+        kraj_mesto!: string;
 
         @ManyToOne(() => Drzave, { cascade: true })
     @JoinColumn()
-        id_drzave?: Drzave;
+        drzave_id?: Drzave;
 
 }

@@ -15,10 +15,10 @@ export function applyFilters<T>(qb: SelectQueryBuilder<T>, query?: any) {
     if(postna_stevilka){
         qb.where("e.postna_stevilka like :name", { name:  `%${postna_stevilka}%` });
     }
-    let { kraj } = query;
+    let { kraj_mesto } = query;
 
-    if(kraj){
-        qb.where("e.kraj like :name", { name:  `%${kraj}%` });
+    if(kraj_mesto){
+        qb.where("e.kraj_mesto like :name", { name:  `%${kraj_mesto}%` });
     }
     return qb;
 }

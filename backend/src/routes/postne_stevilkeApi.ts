@@ -3,6 +3,7 @@ import { getCustomRepository, Like } from 'typeorm';
 import * as TypeBox from '@sinclair/typebox';
 import toString from 'lodash/toString';
 import omit from 'lodash/omit';
+import { parse } from 'json2csv';
 
 import { Postne_stevilkeRepository } from '../repository/Postne_stevilkeRepository';
 import { postne_stevilkeInputSchema, postne_stevilkeSchema } from '../entity/Postne_stevilke';
@@ -13,11 +14,12 @@ export default async (app: FastifyInstance) => {
     const schema = TypeBox.Type.Object({
         q: TypeBox.Type.Optional(TypeBox.Type.Partial(postne_stevilkeSchema, { description: 'Filter query', additionalProperties: false })),
         page: TypeBox.Type.Number({ default: 0, minimum: 0, description: 'Page number' }),
-        limit: TypeBox.Type.Number({ minimum: 0, maximum: 20, default: 10, description: 'Page size' }),
+        limit: TypeBox.Type.Number({ minimum: 0, maximum: 100, default: 10, description: 'Page size' }),
         field: TypeBox.Type.String({default: ''}),
         sort: TypeBox.Type.String({default: 'DESC'}),
+        filetype: TypeBox.Type.Optional(TypeBox.Type.String({default: ''})),
     postna_stevilka: TypeBox.Type.String({default: ''}),
-    kraj: TypeBox.Type.String({default: ''}),
+    kraj_mesto: TypeBox.Type.String({default: ''}),
 
     }, {
         style: 'deepObject',
@@ -37,6 +39,41 @@ export default async (app: FastifyInstance) => {
     }, async (req) => {
         // @ts-ignore
         const [items, count] = await getCustomRepository(Postne_stevilkeRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase());
+        const fileType = req.query.filetype;
+        if (fileType && fileType === 'csv') {
+            const fields = ['id', 'postna_stevilka','kraj_mesto',
+
+                ];
+            const opts = { fields };
+            try {
+                const csv = parse(items, opts);
+                return csv
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            return {
+                rows: items,
+                count,
+                isLastPage: (req.query.page + 1) * req.query.limit >= count,
+            };
+        }
+    });
+
+    app.get<{ Querystring: TypeBox.Static<typeof schema> }>('/postne_stevilke/count', {
+        // @ts-ignore
+        preHandler: app.auth([app.verifyAuthorized]),
+        schema: {
+            querystring: schema,
+            security: [{
+                bearerAuth: [],
+            }],
+            tags: [tag],
+            summary: 'List postne_stevilke',
+        },
+    }, async (req) => {
+        // @ts-ignore
+        const [items, count] = await getCustomRepository(Postne_stevilkeRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase(), true);
         return {
             rows: items,
             count,
@@ -79,14 +116,14 @@ export default async (app: FastifyInstance) => {
         const repo = getCustomRepository(Postne_stevilkeRepository);
 
         const items = await repo.createQueryBuilder('item')
-          .select(['item.id', 'item.kraj'])
+          .select(['item.id'])
 
-          .where("CAST(item.kraj as TEXT) LIKE :query", { query: `%${req.query.query}%` })
+          .where("CAST(item.id as TEXT) LIKE :query", { query: `%${req.query.query}%` })
 
-          .orderBy('item.kraj', 'ASC')
+          .orderBy('item.id', 'ASC')
           .getMany();
 
-        return items.map((item) => ({ id: item.id, label: toString(item.kraj) }));
+        return items.map((item) => ({ id: item.id, label: toString(item.id) }));
     });
 
     const postPayload = TypeBox.Type.Object({
@@ -117,12 +154,12 @@ export default async (app: FastifyInstance) => {
         // @ts-ignore
     }, async (req) => {
         const repo = getCustomRepository(Postne_stevilkeRepository);
-        const payload = omit(req.body.data, ['id_drzave']);
+        const payload = omit(req.body.data, ['drzave_id']);
 
         const { id } = await repo.save({
             ...payload,
 
-                    id_drzave: req.body.data.id_drzave ? { id: req.body.data.id_drzave } : undefined,
+                    drzave_id: req.body.data.drzave_id ? { id: req.body.data.drzave_id } : undefined,
 
         });
 
@@ -131,7 +168,7 @@ export default async (app: FastifyInstance) => {
                 id,
             },
 
-            relations: ['id_drzave']
+            relations: ['drzave_id']
 
         });
     });
@@ -171,7 +208,7 @@ export default async (app: FastifyInstance) => {
                 id: req.params.id,
             },
 
-            relations: ['id_drzave']
+            relations: ['drzave_id']
 
         });
 
@@ -198,13 +235,13 @@ export default async (app: FastifyInstance) => {
             }],
         }
     }, async (req) => {
-        const payload = omit(req.body.data, ['id_drzave']);
+        const payload = omit(req.body.data, ['drzave_id']);
         const repo = getCustomRepository(Postne_stevilkeRepository);
 
         await repo.save({
             ...payload,
 
-                id_drzave: req.body.data.id_drzave ? { id: req.body.data.id_drzave } : undefined,
+                drzave_id: req.body.data.drzave_id ? { id: req.body.data.drzave_id } : undefined,
 
             id: req.params.id,
         });
@@ -214,7 +251,7 @@ export default async (app: FastifyInstance) => {
                 id: req.params.id,
             },
 
-            relations: ['id_drzave']
+            relations: ['drzave_id']
 
         });
     });

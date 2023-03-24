@@ -9,19 +9,21 @@ import {
 } from 'typeorm';
 import * as TypeBox from '@sinclair/typebox';
 
+import { Nullable } from '../utils';
+
 /**
  * Schema for drzave entity
  */
 export const drzaveSchema = TypeBox.Type.Object({
     id: TypeBox.Type.String({ format: 'uuid' }),
 
-        drzava_slo: TypeBox.Type.String({ default: '' }),
+        drzava_lokalno: TypeBox.Type.String({ default: '' }),
+
+        oznaka_drzave: TypeBox.Type.String({ default: '' }),
 
         drzava_iso: TypeBox.Type.String({ default: '' }),
 
-        oznaka_dvomestna: TypeBox.Type.String({ default: '' }),
-
-        oznaka_tromestna: TypeBox.Type.String({ default: '' }),
+        opombe: TypeBox.Type.String({ default: '' }),
 
 }, { additionalProperties: false });
 
@@ -30,13 +32,13 @@ export const drzaveSchema = TypeBox.Type.Object({
  */
 export const drzaveInputSchema = TypeBox.Type.Object({
 
-        drzava_slo: TypeBox.Type.String({ default: '' }),
+        drzava_lokalno: TypeBox.Type.String({ default: '' }),
+
+        oznaka_drzave: TypeBox.Type.String({ default: '' }),
 
         drzava_iso: TypeBox.Type.String({ default: '' }),
 
-        oznaka_dvomestna: TypeBox.Type.String({ default: '' }),
-
-        oznaka_tromestna: TypeBox.Type.String({ default: '' }),
+        opombe: TypeBox.Type.String({ default: '' }),
 
 }, { additionalProperties: false });
 
@@ -57,15 +59,15 @@ export class Drzave implements TypeBox.Static<typeof drzaveSchema> {
     deletedAt?: Date;
 
         @Column({ default: '' })
-        drzava_slo!: string;
+        drzava_lokalno!: string;
+
+        @Column({ default: '' })
+        oznaka_drzave!: string;
 
         @Column({ default: '' })
         drzava_iso!: string;
 
         @Column({ default: '' })
-        oznaka_dvomestna!: string;
-
-        @Column({ default: '' })
-        oznaka_tromestna!: string;
+        opombe!: string;
 
 }

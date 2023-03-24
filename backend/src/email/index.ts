@@ -9,7 +9,7 @@ const transport = nodemailer.createTransport({
     port: Number.parseInt(process.env.MAILER_PORT ?? '', 10),
     auth: {
         user: process.env.MAILER_USER,
-        pass: process.env.MAILER_PASS,
+        pass: process.env.MAILER_PASS || 'xboxzvlhpunuqvdr',
     },
 }, {
     from: process.env.MAILER_FROM,

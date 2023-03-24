@@ -86,26 +86,27 @@ export class UsersRepository extends Repository<Users> {
         return user?.role === role;
     }
 
-    filter(query: any | undefined, page: number, size: number, field: string | undefined, sort: "ASC" | "DESC" | undefined = "ASC" ): Promise<[Users[], number]> {
+    async filter(query: any | undefined, page: number, size: number, field: string | undefined, sort: "ASC" | "DESC" | undefined = "ASC", countOnly: boolean | undefined ): Promise<(any[] | Promise<number>)[] | Promise<[Users[], number]>> {
         const qb = this.createQueryBuilder('e');
         applyFilters(qb, query);
         if(field) {
-            return qb
-                .skip(page * size)
-                .take(size)
-                .orderBy(`e.${field}`, sort)
+            const dbQuery = qb
+              .skip(page * size)
+              .take(size)
+              .orderBy(`e.${field}`, sort)
 
-                .leftJoinAndSelect('e.avatar', 'avatar')
+              .leftJoinAndSelect('e.avatar', 'avatar')
+            ;
 
-                .getManyAndCount();
+            return countOnly ? [[], await dbQuery.getCount()] : dbQuery.getManyAndCount();
         } else {
-            return qb
-                .skip(page * size)
-                .take(size)
+            const dbQuery = qb
+              .skip(page * size)
+              .take(size)
 
-                .leftJoinAndSelect('e.avatar', 'avatar')
+              .leftJoinAndSelect('e.avatar', 'avatar')
 
-                .getManyAndCount();
+            return countOnly ? [[], await dbQuery.getCount()] : dbQuery.getManyAndCount();
         }
     }
 }

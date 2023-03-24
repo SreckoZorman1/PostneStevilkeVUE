@@ -6,22 +6,23 @@ import { applyFilters, EntityQuery } from './drzaveUtils';
 @EntityRepository(Drzave)
 export class DrzaveRepository extends Repository<Drzave> {
 
-    filter(query: any | undefined, page: number, size: number, field: string | undefined, sort: "ASC" | "DESC" | undefined = "ASC" ): Promise<[Drzave[], number]> {
+    async filter(query: any | undefined, page: number, size: number, field: string | undefined, sort: "ASC" | "DESC" | undefined = "ASC", countOnly: boolean | undefined ): Promise<(any[] | Promise<number>)[] | Promise<[Drzave[], number]>> {
         const qb = this.createQueryBuilder('e');
         applyFilters(qb, query);
         if(field) {
-            return qb
-                .skip(page * size)
-                .take(size)
-                .orderBy(`e.${field}`, sort)
+            const dbQuery = qb
+              .skip(page * size)
+              .take(size)
+              .orderBy(`e.${field}`, sort)
+              ;
 
-                .getManyAndCount();
+            return countOnly ? [[], await dbQuery.getCount()] : dbQuery.getManyAndCount();
         } else {
-            return qb
-                .skip(page * size)
-                .take(size)
+            const dbQuery = qb
+              .skip(page * size)
+              .take(size)
 
-                .getManyAndCount();
+            return countOnly ? [[], await dbQuery.getCount()] : dbQuery.getManyAndCount();
         }
     }
 }

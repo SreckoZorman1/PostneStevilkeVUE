@@ -14,6 +14,8 @@ import * as TypeBox from '@sinclair/typebox';
 
 import { File, fileSchema } from './File';
 
+import { Nullable } from '../utils';
+
 export enum Role {
 
         Admin = 'admin',
@@ -62,6 +64,8 @@ export const usersInputSchema = TypeBox.Type.Object({
         disabled: TypeBox.Type.Boolean({ default: false }),
 
         avatar: TypeBox.Type.Array(fileSchema, { default: [] }),
+
+        password: TypeBox.Type.String(),
 
 }, { additionalProperties: false });
 

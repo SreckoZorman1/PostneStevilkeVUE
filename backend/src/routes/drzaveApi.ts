@@ -3,6 +3,7 @@ import { getCustomRepository, Like } from 'typeorm';
 import * as TypeBox from '@sinclair/typebox';
 import toString from 'lodash/toString';
 import omit from 'lodash/omit';
+import { parse } from 'json2csv';
 
 import { DrzaveRepository } from '../repository/DrzaveRepository';
 import { drzaveInputSchema, drzaveSchema } from '../entity/Drzave';
@@ -13,13 +14,14 @@ export default async (app: FastifyInstance) => {
     const schema = TypeBox.Type.Object({
         q: TypeBox.Type.Optional(TypeBox.Type.Partial(drzaveSchema, { description: 'Filter query', additionalProperties: false })),
         page: TypeBox.Type.Number({ default: 0, minimum: 0, description: 'Page number' }),
-        limit: TypeBox.Type.Number({ minimum: 0, maximum: 20, default: 10, description: 'Page size' }),
+        limit: TypeBox.Type.Number({ minimum: 0, maximum: 100, default: 10, description: 'Page size' }),
         field: TypeBox.Type.String({default: ''}),
         sort: TypeBox.Type.String({default: 'DESC'}),
-    drzava_slo: TypeBox.Type.String({default: ''}),
+        filetype: TypeBox.Type.Optional(TypeBox.Type.String({default: ''})),
+    drzava_lokalno: TypeBox.Type.String({default: ''}),
+    oznaka_drzave: TypeBox.Type.String({default: ''}),
     drzava_iso: TypeBox.Type.String({default: ''}),
-    oznaka_dvomestna: TypeBox.Type.String({default: ''}),
-    oznaka_tromestna: TypeBox.Type.String({default: ''}),
+    opombe: TypeBox.Type.String({default: ''}),
 
     }, {
         style: 'deepObject',
@@ -39,6 +41,41 @@ export default async (app: FastifyInstance) => {
     }, async (req) => {
         // @ts-ignore
         const [items, count] = await getCustomRepository(DrzaveRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase());
+        const fileType = req.query.filetype;
+        if (fileType && fileType === 'csv') {
+            const fields = ['id', 'drzava_lokalno','oznaka_drzave','drzava_iso','opombe',
+
+                ];
+            const opts = { fields };
+            try {
+                const csv = parse(items, opts);
+                return csv
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            return {
+                rows: items,
+                count,
+                isLastPage: (req.query.page + 1) * req.query.limit >= count,
+            };
+        }
+    });
+
+    app.get<{ Querystring: TypeBox.Static<typeof schema> }>('/drzave/count', {
+        // @ts-ignore
+        preHandler: app.auth([app.verifyAuthorized]),
+        schema: {
+            querystring: schema,
+            security: [{
+                bearerAuth: [],
+            }],
+            tags: [tag],
+            summary: 'List drzave',
+        },
+    }, async (req) => {
+        // @ts-ignore
+        const [items, count] = await getCustomRepository(DrzaveRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase(), true);
         return {
             rows: items,
             count,
@@ -81,14 +118,14 @@ export default async (app: FastifyInstance) => {
         const repo = getCustomRepository(DrzaveRepository);
 
         const items = await repo.createQueryBuilder('item')
-          .select(['item.id', 'item.oznaka_dvomestna'])
+          .select(['item.id'])
 
-          .where("CAST(item.oznaka_dvomestna as TEXT) LIKE :query", { query: `%${req.query.query}%` })
+          .where("CAST(item.id as TEXT) LIKE :query", { query: `%${req.query.query}%` })
 
-          .orderBy('item.oznaka_dvomestna', 'ASC')
+          .orderBy('item.id', 'ASC')
           .getMany();
 
-        return items.map((item) => ({ id: item.id, label: toString(item.oznaka_dvomestna) }));
+        return items.map((item) => ({ id: item.id, label: toString(item.id) }));
     });
 
     const postPayload = TypeBox.Type.Object({

@@ -3,6 +3,7 @@ import { getCustomRepository, Like } from 'typeorm';
 import * as TypeBox from '@sinclair/typebox';
 import toString from 'lodash/toString';
 import omit from 'lodash/omit';
+import { parse } from 'json2csv';
 
 import { UsersRepository } from '../repository/UsersRepository';
 import { usersInputSchema, usersSchema } from '../entity/Users';
@@ -13,9 +14,10 @@ export default async (app: FastifyInstance) => {
     const schema = TypeBox.Type.Object({
         q: TypeBox.Type.Optional(TypeBox.Type.Partial(usersSchema, { description: 'Filter query', additionalProperties: false })),
         page: TypeBox.Type.Number({ default: 0, minimum: 0, description: 'Page number' }),
-        limit: TypeBox.Type.Number({ minimum: 0, maximum: 20, default: 10, description: 'Page size' }),
+        limit: TypeBox.Type.Number({ minimum: 0, maximum: 100, default: 10, description: 'Page size' }),
         field: TypeBox.Type.String({default: ''}),
         sort: TypeBox.Type.String({default: 'DESC'}),
+        filetype: TypeBox.Type.Optional(TypeBox.Type.String({default: ''})),
     firstName: TypeBox.Type.String({default: ''}),
     lastName: TypeBox.Type.String({default: ''}),
     phoneNumber: TypeBox.Type.String({default: ''}),
@@ -39,6 +41,41 @@ export default async (app: FastifyInstance) => {
     }, async (req) => {
         // @ts-ignore
         const [items, count] = await getCustomRepository(UsersRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase());
+        const fileType = req.query.filetype;
+        if (fileType && fileType === 'csv') {
+            const fields = ['id', 'firstName','lastName','phoneNumber','email',
+
+                ];
+            const opts = { fields };
+            try {
+                const csv = parse(items, opts);
+                return csv
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            return {
+                rows: items,
+                count,
+                isLastPage: (req.query.page + 1) * req.query.limit >= count,
+            };
+        }
+    });
+
+    app.get<{ Querystring: TypeBox.Static<typeof schema> }>('/users/count', {
+        // @ts-ignore
+        preHandler: app.auth([app.verifyAuthorized]),
+        schema: {
+            querystring: schema,
+            security: [{
+                bearerAuth: [],
+            }],
+            tags: [tag],
+            summary: 'List users',
+        },
+    }, async (req) => {
+        // @ts-ignore
+        const [items, count] = await getCustomRepository(UsersRepository).filter(req.query, req.query.page, req.query.limit, req.query.field, req.query.sort.toUpperCase(), true);
         return {
             rows: items,
             count,
