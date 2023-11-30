@@ -9,7 +9,7 @@ const transport = nodemailer.createTransport({
     port: Number.parseInt(process.env.MAILER_PORT ?? '', 10),
     auth: {
         user: process.env.MAILER_USER,
-        pass: process.env.MAILER_PASS || 'xboxzvlhpunuqvdr',
+        pass: process.env.EMAIL_PASS,
     },
 }, {
     from: process.env.MAILER_FROM,
@@ -21,6 +21,7 @@ export function sendMail(templateName: string, opts: { to: string, subject: stri
     const res = mjml2html(template(context));
 
     return transport.sendMail({
+        from: process.env.MAILER_FROM,
         to: opts.to,
         subject: opts.subject,
         html: res.html,

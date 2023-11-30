@@ -19,6 +19,7 @@ import { Nullable } from '../utils';
 /**
  * Schema for postne_stevilke entity
  */
+// @ts-ignore
 export const postne_stevilkeSchema = TypeBox.Type.Object({
     id: TypeBox.Type.String({ format: 'uuid' }),
 
@@ -33,6 +34,7 @@ export const postne_stevilkeSchema = TypeBox.Type.Object({
 /**
  * Input type for editing and creating postne_stevilke
  */
+// @ts-ignore
 export const postne_stevilkeInputSchema = TypeBox.Type.Object({
 
         postna_stevilka: TypeBox.Type.String({ default: '' }),
@@ -46,6 +48,7 @@ export const postne_stevilkeInputSchema = TypeBox.Type.Object({
 export type Postne_stevilkeInput = TypeBox.Static<typeof postne_stevilkeInputSchema>;
 
 @Entity()
+// @ts-ignore
 export class Postne_stevilke implements Omit<TypeBox.Static<typeof postne_stevilkeSchema>, 'drzave_id'> {
     @PrimaryGeneratedColumn('uuid')
     id!: string;

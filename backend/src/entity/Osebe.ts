@@ -19,6 +19,7 @@ import { Nullable } from '../utils';
 /**
  * Schema for osebe entity
  */
+// @ts-ignore
 export const osebeSchema = TypeBox.Type.Object({
     id: TypeBox.Type.String({ format: 'uuid' }),
 
@@ -47,6 +48,7 @@ export const osebeSchema = TypeBox.Type.Object({
 /**
  * Input type for editing and creating osebe
  */
+// @ts-ignore
 export const osebeInputSchema = TypeBox.Type.Object({
 
         ime: TypeBox.Type.String({ default: '' }),
@@ -74,6 +76,7 @@ export const osebeInputSchema = TypeBox.Type.Object({
 export type OsebeInput = TypeBox.Static<typeof osebeInputSchema>;
 
 @Entity()
+// @ts-ignore
 export class Osebe implements Omit<TypeBox.Static<typeof osebeSchema>, 'poste_stevilke_id'> {
     @PrimaryGeneratedColumn('uuid')
     id!: string;

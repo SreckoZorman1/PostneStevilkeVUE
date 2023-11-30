@@ -64,7 +64,7 @@ server.setErrorHandler(function (error: any, request: any, reply: any) {
     if (error.validation) {
         const errors = {};
         for (const validation of error.validation) {
-            set(errors, validation.dataPath.slice(1), validation.message);
+            set(errors, validation.dataPath?.slice(1), validation.message);
         }
         reply.status(400).send({
             ...server.httpErrors.badRequest(error.message),

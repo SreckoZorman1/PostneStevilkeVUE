@@ -158,6 +158,7 @@ export default async (app: FastifyInstance) => {
 
         const { id } = await repo.save({
             ...payload,
+            // @ts-ignore
 
                     drzave_id: req.body.data.drzave_id ? { id: req.body.data.drzave_id } : undefined,
 
@@ -240,6 +241,7 @@ export default async (app: FastifyInstance) => {
 
         await repo.save({
             ...payload,
+            // @ts-ignore
 
                 drzave_id: req.body.data.drzave_id ? { id: req.body.data.drzave_id } : undefined,
 

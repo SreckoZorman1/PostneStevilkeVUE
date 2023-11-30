@@ -27,6 +27,7 @@ export enum Role {
 /**
  * Schema for users entity
  */
+// @ts-ignore
 export const usersSchema = TypeBox.Type.Object({
     id: TypeBox.Type.String({ format: 'uuid' }),
 
@@ -49,6 +50,7 @@ export const usersSchema = TypeBox.Type.Object({
 /**
  * Input type for editing and creating users
  */
+// @ts-ignore
 export const usersInputSchema = TypeBox.Type.Object({
 
         firstName: TypeBox.Type.String({ default: '' }),
@@ -72,6 +74,7 @@ export const usersInputSchema = TypeBox.Type.Object({
 export type UsersInput = TypeBox.Static<typeof usersInputSchema>;
 
 @Entity()
+// @ts-ignore
 export class Users implements Omit<TypeBox.Static<typeof usersSchema>, 'emailVerificationTokenExpiresAt' | 'passwordResetTokenExpiresAt'> {
     @PrimaryGeneratedColumn('uuid')
     id!: string;

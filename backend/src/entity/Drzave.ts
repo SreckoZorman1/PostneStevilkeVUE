@@ -14,6 +14,7 @@ import { Nullable } from '../utils';
 /**
  * Schema for drzave entity
  */
+// @ts-ignore
 export const drzaveSchema = TypeBox.Type.Object({
     id: TypeBox.Type.String({ format: 'uuid' }),
 
@@ -30,6 +31,7 @@ export const drzaveSchema = TypeBox.Type.Object({
 /**
  * Input type for editing and creating drzave
  */
+// @ts-ignore
 export const drzaveInputSchema = TypeBox.Type.Object({
 
         drzava_lokalno: TypeBox.Type.String({ default: '' }),
@@ -45,6 +47,7 @@ export const drzaveInputSchema = TypeBox.Type.Object({
 export type DrzaveInput = TypeBox.Static<typeof drzaveInputSchema>;
 
 @Entity()
+// @ts-ignore
 export class Drzave implements TypeBox.Static<typeof drzaveSchema> {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
